@@ -145,7 +145,7 @@ class TestRequireVirtualenvTruthMatrix:
                 with patch('pip._internal.cli.base_command.setup_logging'):
                     with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                         with patch('pip._internal.cli.base_command.tempdir_registry'):
-                            with patch('pip._internal.cli.base_command.reconfigure'):
+                            with patch('pip._vendor.rich.reconfigure'):
                                 
                                 if should_exit:
                                     # Test should trigger sys.exit
@@ -184,7 +184,7 @@ class TestRequireVirtualenvErrorHandling:
             with patch('pip._internal.cli.base_command.setup_logging'):
                 with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                     with patch('pip._internal.cli.base_command.tempdir_registry'):
-                        with patch('pip._internal.cli.base_command.reconfigure'):
+                        with patch('pip._vendor.rich.reconfigure'):
                             
                             command._main([])
                             
@@ -211,7 +211,7 @@ class TestRequireVirtualenvErrorHandling:
             with patch('pip._internal.cli.base_command.setup_logging'):
                 with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                     with patch('pip._internal.cli.base_command.tempdir_registry'):
-                        with patch('pip._internal.cli.base_command.reconfigure'):
+                        with patch('pip._vendor.rich.reconfigure'):
                             
                             command._main([])
                             
@@ -237,7 +237,7 @@ class TestRequireVirtualenvErrorHandling:
             with patch('pip._internal.cli.base_command.setup_logging'):
                 with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                     with patch('pip._internal.cli.base_command.tempdir_registry'):
-                        with patch('pip._internal.cli.base_command.reconfigure'):
+                        with patch('pip._vendor.rich.reconfigure'):
                             with caplog.at_level(logging.CRITICAL):
                                 
                                 command._main([])
@@ -280,7 +280,7 @@ class TestCommandSpecificBypassBehavior:
                 with patch('pip._internal.cli.base_command.setup_logging'):
                     with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                         with patch('pip._internal.cli.base_command.tempdir_registry'):
-                            with patch('pip._internal.cli.base_command.reconfigure'):
+                            with patch('pip._vendor.rich.reconfigure'):
                                 
                                 # Command should proceed normally despite no virtualenv
                                 result = command._main([])
@@ -312,7 +312,7 @@ class TestCommandSpecificBypassBehavior:
             with patch('pip._internal.cli.base_command.setup_logging'):
                 with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                     with patch('pip._internal.cli.base_command.tempdir_registry'):
-                        with patch('pip._internal.cli.base_command.reconfigure'):
+                        with patch('pip._vendor.rich.reconfigure'):
                             
                             # Command should exit with error
                             command._main([])
@@ -343,7 +343,7 @@ class TestVirtualenvDetectionIntegration:
             with patch('pip._internal.cli.base_command.setup_logging'):
                 with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                     with patch('pip._internal.cli.base_command.tempdir_registry'):
-                        with patch('pip._internal.cli.base_command.reconfigure'):
+                        with patch('pip._vendor.rich.reconfigure'):
                             with patch('pip._internal.cli.base_command.running_under_virtualenv') as mock_venv:
                                 
                                 # Mock virtualenv detection to return False
@@ -374,7 +374,7 @@ class TestVirtualenvDetectionIntegration:
                 with patch('pip._internal.cli.base_command.setup_logging'):
                     with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                         with patch('pip._internal.cli.base_command.tempdir_registry'):
-                            with patch('pip._internal.cli.base_command.reconfigure'):
+                            with patch('pip._vendor.rich.reconfigure'):
                                 with patch('pip._internal.cli.base_command.running_under_virtualenv') as mock_venv:
                                     
                                     # Mock virtualenv detection to return True
@@ -413,7 +413,7 @@ class TestRequireVirtualenvConditionLogic:
                 with patch('pip._internal.cli.base_command.setup_logging'):
                     with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                         with patch('pip._internal.cli.base_command.tempdir_registry'):
-                            with patch('pip._internal.cli.base_command.reconfigure'):
+                            with patch('pip._vendor.rich.reconfigure'):
                                 with patch('pip._internal.cli.base_command.running_under_virtualenv') as mock_venv:
                                     
                                     result = command._main([])
@@ -443,7 +443,7 @@ class TestRequireVirtualenvConditionLogic:
                 with patch('pip._internal.cli.base_command.setup_logging'):
                     with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                         with patch('pip._internal.cli.base_command.tempdir_registry'):
-                            with patch('pip._internal.cli.base_command.reconfigure'):
+                            with patch('pip._vendor.rich.reconfigure'):
                                 with patch('pip._internal.cli.base_command.running_under_virtualenv') as mock_venv:
                                     
                                     result = command._main([])
@@ -472,7 +472,7 @@ class TestRequireVirtualenvConditionLogic:
             with patch('pip._internal.cli.base_command.setup_logging'):
                 with patch('pip._internal.cli.base_command.global_tempdir_manager'):
                     with patch('pip._internal.cli.base_command.tempdir_registry'):
-                        with patch('pip._internal.cli.base_command.reconfigure'):
+                        with patch('pip._vendor.rich.reconfigure'):
                             with patch('pip._internal.cli.base_command.running_under_virtualenv') as mock_venv:
                                 
                                 mock_venv.return_value = False
