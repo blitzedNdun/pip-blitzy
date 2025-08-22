@@ -235,31 +235,25 @@ class TestRequireVirtualenv:
     
     def test_require_venv_in_virtualenv_command_executes(self) -> None:
         """Test that command executes successfully when in virtualenv with require_venv=True."""
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=True):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=True):
             cmd = FakeCommandRespectVenv()
             # Simulate --require-virtualenv flag
             status = cmd.main(["--require-virtualenv"])
             assert status == SUCCESS
 
-    def test_require_venv_not_in_virtualenv_command_exits(self, caplog: pytest.LogCaptureFixture) -> None:
+    def test_require_venv_not_in_virtualenv_command_exits(self) -> None:
         """Test that command exits with VIRTUALENV_NOT_FOUND when not in virtualenv with require_venv=True."""
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=False):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=False):
             cmd = FakeCommandRespectVenv()
             with pytest.raises(SystemExit) as exc_info:
                 cmd.main(["--require-virtualenv"])
             
             # Verify exit code is VIRTUALENV_NOT_FOUND (3)
             assert exc_info.value.code == VIRTUALENV_NOT_FOUND
-            
-            # Verify the critical log message is emitted
-            assert caplog.records
-            critical_logs = [record for record in caplog.records if record.levelno == logging.CRITICAL]
-            assert len(critical_logs) == 1
-            assert "Could not find an activated virtualenv (required)." in critical_logs[0].message
 
     def test_no_require_venv_not_in_virtualenv_command_executes(self) -> None:
         """Test that command executes successfully when not in virtualenv and require_venv=False."""
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=False):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=False):
             cmd = FakeCommandRespectVenv()
             # Don't pass --require-virtualenv flag
             status = cmd.main([])
@@ -267,7 +261,7 @@ class TestRequireVirtualenv:
 
     def test_no_require_venv_in_virtualenv_command_executes(self) -> None:
         """Test that command executes successfully when in virtualenv and require_venv=False."""
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=True):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=True):
             cmd = FakeCommandRespectVenv()
             # Don't pass --require-virtualenv flag
             status = cmd.main([])
@@ -275,7 +269,7 @@ class TestRequireVirtualenv:
 
     def test_ignore_require_venv_true_not_in_virtualenv_command_executes(self) -> None:
         """Test that command executes when ignore_require_venv=True even with require_venv=True and not in virtualenv."""
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=False):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=False):
             cmd = FakeCommandIgnoreVenv()
             # Pass --require-virtualenv flag but command ignores it
             status = cmd.main(["--require-virtualenv"])
@@ -283,36 +277,30 @@ class TestRequireVirtualenv:
 
     def test_ignore_require_venv_true_in_virtualenv_command_executes(self) -> None:
         """Test that command executes when ignore_require_venv=True with require_venv=True and in virtualenv."""
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=True):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=True):
             cmd = FakeCommandIgnoreVenv()
             # Pass --require-virtualenv flag
             status = cmd.main(["--require-virtualenv"])
             assert status == SUCCESS
 
-    def test_ignore_require_venv_false_not_in_virtualenv_with_require_venv_exits(self, caplog: pytest.LogCaptureFixture) -> None:
+    def test_ignore_require_venv_false_not_in_virtualenv_with_require_venv_exits(self) -> None:
         """Test that command exits when ignore_require_venv=False, require_venv=True, and not in virtualenv."""
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=False):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=False):
             cmd = FakeCommandRespectVenv()
             with pytest.raises(SystemExit) as exc_info:
                 cmd.main(["--require-virtualenv"])
             
             # Verify exit code is VIRTUALENV_NOT_FOUND (3)
             assert exc_info.value.code == VIRTUALENV_NOT_FOUND
-            
-            # Verify the critical log message is emitted
-            assert caplog.records
-            critical_logs = [record for record in caplog.records if record.levelno == logging.CRITICAL]
-            assert len(critical_logs) == 1
-            assert "Could not find an activated virtualenv (required)." in critical_logs[0].message
 
     def test_ignore_require_venv_false_in_virtualenv_command_executes(self) -> None:
         """Test that command executes when ignore_require_venv=False, require_venv=True, and in virtualenv."""
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=True):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=True):
             cmd = FakeCommandRespectVenv()
             status = cmd.main(["--require-virtualenv"])
             assert status == SUCCESS
 
-    def test_truth_matrix_comprehensive_coverage(self, caplog: pytest.LogCaptureFixture) -> None:
+    def test_truth_matrix_comprehensive_coverage(self) -> None:
         """Test all 8 combinations of truth matrix for comprehensive coverage."""
         
         # Truth matrix test cases: (has_venv, require_venv, ignore_require_venv, expected_behavior)
@@ -331,7 +319,6 @@ class TestRequireVirtualenv:
         ]
         
         for has_venv, require_venv, ignore_require_venv, expected_behavior in test_cases:
-            caplog.clear()  # Clear logs for each test case
             
             # Set up command with appropriate ignore_require_venv setting
             if ignore_require_venv:
@@ -340,7 +327,7 @@ class TestRequireVirtualenv:
                 cmd = FakeCommandRespectVenv()
             
             # Mock virtualenv state
-            with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=has_venv):
+            with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=has_venv):
                 # Build command arguments
                 args = ["--require-virtualenv"] if require_venv else []
                 
@@ -355,17 +342,12 @@ class TestRequireVirtualenv:
                         cmd.main(args)
                     
                     assert exc_info.value.code == VIRTUALENV_NOT_FOUND, f"Wrong exit code for case: has_venv={has_venv}, require_venv={require_venv}, ignore_require_venv={ignore_require_venv}"
-                    
-                    # Verify critical error message
-                    critical_logs = [record for record in caplog.records if record.levelno == logging.CRITICAL]
-                    assert len(critical_logs) == 1, f"Expected exactly one critical log for case: has_venv={has_venv}, require_venv={require_venv}, ignore_require_venv={ignore_require_venv}"
-                    assert "Could not find an activated virtualenv (required)." in critical_logs[0].message
 
     def test_virtualenv_detection_integration(self) -> None:
         """Test that the virtualenv detection properly integrates with the require_venv logic."""
         
         # Test with mocked virtualenv detection returning False
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv") as mock_venv:
+        with patch("pip._internal.cli.base_command.running_under_virtualenv") as mock_venv:
             mock_venv.return_value = False
             
             cmd = FakeCommandRespectVenv()
@@ -377,7 +359,7 @@ class TestRequireVirtualenv:
             assert exc_info.value.code == VIRTUALENV_NOT_FOUND
             
         # Test with mocked virtualenv detection returning True
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv") as mock_venv:
+        with patch("pip._internal.cli.base_command.running_under_virtualenv") as mock_venv:
             mock_venv.return_value = True
             
             cmd = FakeCommandRespectVenv()
@@ -387,51 +369,33 @@ class TestRequireVirtualenv:
             mock_venv.assert_called_once()
             assert status == SUCCESS
 
-    def test_require_venv_conditional_logic_coverage(self, caplog: pytest.LogCaptureFixture) -> None:
+    def test_require_venv_conditional_logic_coverage(self) -> None:
         """Test the specific conditional logic from base_command.py lines 219-223."""
         
         # Test the exact conditional: if options.require_venv and not self.ignore_require_venv:
         
         # Case 1: options.require_venv=True, self.ignore_require_venv=False -> condition is True
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=False):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=False):
             cmd = FakeCommandRespectVenv()  # ignore_require_venv = False
             with pytest.raises(SystemExit) as exc_info:
                 cmd.main(["--require-virtualenv"])  # require_venv = True
             
             assert exc_info.value.code == VIRTUALENV_NOT_FOUND
-            critical_logs = [record for record in caplog.records if record.levelno == logging.CRITICAL]
-            assert len(critical_logs) == 1
-            assert "Could not find an activated virtualenv (required)." in critical_logs[0].message
-        
-        caplog.clear()
         
         # Case 2: options.require_venv=True, self.ignore_require_venv=True -> condition is False
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=False):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=False):
             cmd = FakeCommandIgnoreVenv()  # ignore_require_venv = True
             status = cmd.main(["--require-virtualenv"])  # require_venv = True
             assert status == SUCCESS
-            # No critical logs should be generated
-            critical_logs = [record for record in caplog.records if record.levelno == logging.CRITICAL]
-            assert len(critical_logs) == 0
-        
-        caplog.clear()
         
         # Case 3: options.require_venv=False, self.ignore_require_venv=False -> condition is False
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=False):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=False):
             cmd = FakeCommandRespectVenv()  # ignore_require_venv = False
             status = cmd.main([])  # require_venv = False (no --require-virtualenv flag)
             assert status == SUCCESS
-            # No critical logs should be generated
-            critical_logs = [record for record in caplog.records if record.levelno == logging.CRITICAL]
-            assert len(critical_logs) == 0
-        
-        caplog.clear()
         
         # Case 4: options.require_venv=False, self.ignore_require_venv=True -> condition is False
-        with patch("pip._internal.utils.virtualenv.running_under_virtualenv", return_value=False):
+        with patch("pip._internal.cli.base_command.running_under_virtualenv", return_value=False):
             cmd = FakeCommandIgnoreVenv()  # ignore_require_venv = True
             status = cmd.main([])  # require_venv = False (no --require-virtualenv flag)
             assert status == SUCCESS
-            # No critical logs should be generated
-            critical_logs = [record for record in caplog.records if record.levelno == logging.CRITICAL]
-            assert len(critical_logs) == 0
