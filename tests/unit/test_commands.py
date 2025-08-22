@@ -172,6 +172,7 @@ def test_ignore_require_venv_commands() -> None:
 
     expected = [
         "cache",
+        "check",
         "completion", 
         "config",
         "debug",
@@ -183,6 +184,5 @@ def test_ignore_require_venv_commands() -> None:
         "list",
         "search",
         "show",
-        "version",
     ]
     check_commands(has_ignore_require_venv, expected)
