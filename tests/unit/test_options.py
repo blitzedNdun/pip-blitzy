@@ -491,7 +491,7 @@ class TestGeneralOptions(AddFakeCommandMixin):
         assert options1.require_venv
         assert options2.require_venv
 
-    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    @patch("pip._internal.cli.base_command.running_under_virtualenv")
     def test_require_virtualenv_enforcement_not_in_venv(
         self, mock_running_under_virtualenv: Any
     ) -> None:
@@ -505,7 +505,7 @@ class TestGeneralOptions(AddFakeCommandMixin):
         assert exc_info.value.code == VIRTUALENV_NOT_FOUND
         mock_running_under_virtualenv.assert_called_once()
 
-    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    @patch("pip._internal.cli.base_command.running_under_virtualenv")
     def test_require_virtualenv_enforcement_in_venv(
         self, mock_running_under_virtualenv: Any
     ) -> None:
@@ -522,7 +522,7 @@ class TestGeneralOptions(AddFakeCommandMixin):
         
         mock_running_under_virtualenv.assert_called_once()
 
-    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    @patch("pip._internal.cli.base_command.running_under_virtualenv")
     def test_require_virtualenv_bypass_with_ignore_command(
         self, mock_running_under_virtualenv: Any
     ) -> None:
@@ -539,7 +539,7 @@ class TestGeneralOptions(AddFakeCommandMixin):
         # Mock should not be called since the check is bypassed
         mock_running_under_virtualenv.assert_not_called()
 
-    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    @patch("pip._internal.cli.base_command.running_under_virtualenv")
     def test_require_virtualenv_bypass_with_ignore_command_debug(
         self, mock_running_under_virtualenv: Any
     ) -> None:
@@ -566,7 +566,7 @@ class TestGeneralOptions(AddFakeCommandMixin):
             # Should not exit with VIRTUALENV_NOT_FOUND
             assert e.code != VIRTUALENV_NOT_FOUND
 
-    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    @patch("pip._internal.cli.base_command.running_under_virtualenv")
     def test_require_virtualenv_truth_matrix_comprehensive(
         self, mock_running_under_virtualenv: Any
     ) -> None:
