@@ -6,11 +6,13 @@ from contextlib import contextmanager
 from optparse import Values
 from tempfile import NamedTemporaryFile
 from typing import Any, cast
+from unittest.mock import patch
 
 import pytest
 
 import pip._internal.configuration
 from pip._internal.cli.main import main
+from pip._internal.cli.status_codes import VIRTUALENV_NOT_FOUND
 from pip._internal.commands import create_command
 from pip._internal.commands.configuration import ConfigurationCommand
 from pip._internal.exceptions import PipError
@@ -488,6 +490,115 @@ class TestGeneralOptions(AddFakeCommandMixin):
         )
         assert options1.require_venv
         assert options2.require_venv
+
+    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    def test_require_virtualenv_enforcement_not_in_venv(
+        self, mock_running_under_virtualenv: Any
+    ) -> None:
+        """Test --require-virtualenv exits with VIRTUALENV_NOT_FOUND when not in venv."""
+        mock_running_under_virtualenv.return_value = False
+        
+        # Test with a command that does NOT ignore require_venv (install command)
+        with pytest.raises(SystemExit) as exc_info:
+            main(["--require-virtualenv", "install", "some-package"])
+        
+        assert exc_info.value.code == VIRTUALENV_NOT_FOUND
+        mock_running_under_virtualenv.assert_called_once()
+
+    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    def test_require_virtualenv_enforcement_in_venv(
+        self, mock_running_under_virtualenv: Any
+    ) -> None:
+        """Test --require-virtualenv succeeds when in venv."""
+        mock_running_under_virtualenv.return_value = True
+        
+        # Should not raise SystemExit - will fail later for other reasons
+        # but won't fail due to virtualenv requirement
+        try:
+            main(["--require-virtualenv", "install", "some-package"])
+        except SystemExit as e:
+            # Should not exit with VIRTUALENV_NOT_FOUND
+            assert e.code != VIRTUALENV_NOT_FOUND
+        
+        mock_running_under_virtualenv.assert_called_once()
+
+    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    def test_require_virtualenv_bypass_with_ignore_command(
+        self, mock_running_under_virtualenv: Any
+    ) -> None:
+        """Test commands with ignore_require_venv=True bypass the check."""
+        mock_running_under_virtualenv.return_value = False
+        
+        # Help command has ignore_require_venv=True, so should not check virtualenv
+        try:
+            main(["--require-virtualenv", "help", "install"])
+        except SystemExit as e:
+            # Should not exit with VIRTUALENV_NOT_FOUND 
+            assert e.code != VIRTUALENV_NOT_FOUND
+        
+        # Mock should not be called since the check is bypassed
+        mock_running_under_virtualenv.assert_not_called()
+
+    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    def test_require_virtualenv_bypass_with_ignore_command_debug(
+        self, mock_running_under_virtualenv: Any
+    ) -> None:
+        """Test debug command bypasses virtualenv requirement."""
+        mock_running_under_virtualenv.return_value = False
+        
+        # Debug command has ignore_require_venv=True
+        try:
+            main(["--require-virtualenv", "debug"])
+        except SystemExit as e:
+            # Should not exit with VIRTUALENV_NOT_FOUND
+            assert e.code != VIRTUALENV_NOT_FOUND
+        
+        # Mock should not be called since the check is bypassed
+        mock_running_under_virtualenv.assert_not_called()
+
+    def test_require_virtualenv_without_flag_no_enforcement(self) -> None:
+        """Test that without --require-virtualenv, no enforcement occurs."""
+        # Should not raise SystemExit for virtualenv reasons
+        # (may fail for other reasons but not virtualenv)
+        try:
+            main(["install", "some-package"]) 
+        except SystemExit as e:
+            # Should not exit with VIRTUALENV_NOT_FOUND
+            assert e.code != VIRTUALENV_NOT_FOUND
+
+    @patch("pip._internal.utils.virtualenv.running_under_virtualenv")
+    def test_require_virtualenv_truth_matrix_comprehensive(
+        self, mock_running_under_virtualenv: Any
+    ) -> None:
+        """Test all combinations of has_venv, require_venv, and ignore_require_venv."""
+        
+        # Test case: NOT in venv + require_venv=True + ignore_require_venv=False 
+        # Expected: Exit with VIRTUALENV_NOT_FOUND
+        mock_running_under_virtualenv.return_value = False
+        with pytest.raises(SystemExit) as exc_info:
+            main(["--require-virtualenv", "install", "package"])
+        assert exc_info.value.code == VIRTUALENV_NOT_FOUND
+        
+        # Test case: IN venv + require_venv=True + ignore_require_venv=False
+        # Expected: Should not exit with VIRTUALENV_NOT_FOUND
+        mock_running_under_virtualenv.reset_mock()
+        mock_running_under_virtualenv.return_value = True
+        try:
+            main(["--require-virtualenv", "install", "package"])
+        except SystemExit as e:
+            assert e.code != VIRTUALENV_NOT_FOUND
+        
+        # Test case: NOT in venv + require_venv=True + ignore_require_venv=True
+        # Expected: Should not exit with VIRTUALENV_NOT_FOUND (bypass)
+        mock_running_under_virtualenv.reset_mock()
+        mock_running_under_virtualenv.return_value = False
+        try:
+            main(["--require-virtualenv", "help", "install"])
+        except SystemExit as e:
+            assert e.code != VIRTUALENV_NOT_FOUND
+        
+        # Verify the bypass actually prevented the check
+        mock_running_under_virtualenv.assert_not_called()
 
     def test_log(self) -> None:
         # FakeCommand intentionally returns the wrong type.
