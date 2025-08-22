@@ -158,3 +158,31 @@ def test_list_pip_version_check(version_check_mock: mock.Mock, flag: str) -> Non
         version_check_mock.assert_called_once()
     else:
         version_check_mock.assert_not_called()
+
+
+def test_ignore_require_venv_commands() -> None:
+    """
+    Test which commands have ignore_require_venv=True to bypass --require-virtualenv.
+    
+    Per Section 0.4 of the Summary of Changes, this verifies the command-specific
+    bypass behavior where exactly 13 commands should ignore the virtualenv requirement.
+    """
+    def has_ignore_require_venv(command: Command) -> bool:
+        return getattr(command, 'ignore_require_venv', False)
+
+    expected = [
+        "cache",
+        "completion", 
+        "config",
+        "debug",
+        "freeze",
+        "hash",
+        "help",
+        "index",
+        "inspect",
+        "list",
+        "search",
+        "show",
+        "version",
+    ]
+    check_commands(has_ignore_require_venv, expected)
