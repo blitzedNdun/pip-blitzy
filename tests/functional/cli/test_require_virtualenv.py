@@ -42,11 +42,14 @@ class TestCLIIntegration:
     """Test --require-virtualenv CLI flag integration."""
     
     def test_require_virtualenv_flag_outside_venv_fails(
-        self, script: PipTestEnvironment, shared_data: TestData
+        self, script: PipTestEnvironment, shared_data: TestData, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test pip install --require-virtualenv fails outside virtual environment."""
-        # Ensure we're not in a virtual environment by checking the script environment
-        # The script fixture should provide a clean environment
+        # Simulate not being in a virtual environment by manipulating environment variables
+        # We need to make the subprocess think it's not in a venv
+        monkeypatch.setitem(os.environ, "VIRTUAL_ENV", "")
+        monkeypatch.setitem(os.environ, "CONDA_DEFAULT_ENV", "")
+        
         result = script.pip(
             "install",
             "--require-virtualenv", 
@@ -171,7 +174,7 @@ class TestConfigFile:
             require-virtualenv = true
         """).strip()
         
-        # Create a virtual environment
+        # Create a virtual environment with pip
         venv_path = os.fspath(tmpdir / "test_venv")
         env = EnvBuilder(with_pip=False)
         env.create(venv_path)
