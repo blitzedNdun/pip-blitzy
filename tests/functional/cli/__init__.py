@@ -1,0 +1,1 @@
+# CLI-specific functional tests for pip

@@ -479,6 +479,11 @@ class TestGeneralOptions(AddFakeCommandMixin):
         assert options.cache_dir is False
 
     def test_require_virtualenv(self) -> None:
+        """Basic flag parsing test.
+        For comprehensive --require-virtualenv testing, see:
+        - tests/unit/cli/test_require_virtualenv.py
+        - tests/functional/cli/test_require_virtualenv.py
+        """
         # FakeCommand intentionally returns the wrong type.
         options1, args1 = cast(
             tuple[Values, list[str]], main(["--require-virtualenv", "fake"])
