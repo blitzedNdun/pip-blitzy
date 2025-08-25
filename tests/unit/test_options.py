@@ -479,7 +479,7 @@ class TestGeneralOptions(AddFakeCommandMixin):
         assert options.cache_dir is False
 
     def test_require_virtualenv(self) -> None:
-        """Basic flag parsing test. 
+        """Basic flag parsing test.
         For comprehensive --require-virtualenv testing, see:
         - tests/unit/cli/test_require_virtualenv.py
         - tests/functional/cli/test_require_virtualenv.py
