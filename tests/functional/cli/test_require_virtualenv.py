@@ -31,8 +31,6 @@ since functional tests run within the pip test environment.
 
 from __future__ import annotations
 
-import pytest
-
 from tests.lib import PipTestEnvironment
 
 
@@ -109,7 +107,7 @@ class TestRequireVirtualenvFunctional:
             ("freeze", []),
             ("check", []),
             ("debug", []),
-            
+
             # Commands that need subcommands - test with valid subcommands
             ("cache", ["dir"]),
             ("show", ["pip"]),  # Show info about pip itself
@@ -117,15 +115,15 @@ class TestRequireVirtualenvFunctional:
 
         for command, extra_args in test_commands:
             cmd_args = [command] + extra_args + ["--require-virtualenv"]
-            
+
             # Some commands like 'debug' produce warnings, which is expected
             allow_warnings = command in ["debug"]
             result = script.pip(*cmd_args, allow_stderr_warning=allow_warnings)
-            
+
             # All these commands should succeed (return code 0)
             # since they ignore the virtualenv requirement
             assert result.returncode == 0, f"Command {command} failed"
-            
+
             # Should not contain virtualenv error message
             assert (
                 "Could not find an activated virtualenv (required)."
@@ -145,7 +143,7 @@ class TestRequireVirtualenvFunctional:
         assert result.returncode == 0
         assert "--require-virtualenv" in result.stdout
 
-        # Test wheel command help  
+        # Test wheel command help
         result = script.pip("wheel", "--help")
         assert result.returncode == 0
         assert "--require-virtualenv" in result.stdout
@@ -168,7 +166,7 @@ class TestRequireVirtualenvFunctional:
         assert result.returncode == 0
         assert "Could not find an activated virtualenv (required)." not in result.stderr
 
-        # Test with quiet flag  
+        # Test with quiet flag
         result = script.pip("help", "--require-virtualenv", "--quiet")
         assert result.returncode == 0
         assert "Could not find an activated virtualenv (required)." not in result.stderr
@@ -194,7 +192,7 @@ class TestRequireVirtualenvFunctional:
             if command in self.BYPASS_COMMANDS:
                 # Some commands like 'debug' produce warnings, which is expected
                 allow_warnings = command in ["debug"]
-                result = script.pip(command, "--require-virtualenv", 
+                result = script.pip(command, "--require-virtualenv",
                                   allow_stderr_warning=allow_warnings)
                 assert result.returncode == 0, f"Command {command} failed"
                 assert (
